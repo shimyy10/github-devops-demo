@@ -1,6 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { add, subtract, multiply, divide } = require("../src/calculator");
+const { add, subtract, multiply, divide, power } = require("../src/calculator");
 
 test("add sums two numbers", () => {
   assert.equal(add(2, 3), 5);
@@ -20,4 +20,8 @@ test("divide computes the quotient", () => {
 
 test("divide throws on division by zero", () => {
   assert.throws(() => divide(1, 0), /division by zero/);
+});
+
+test("power raises base to the exponent", () => {
+  assert.equal(power(2, 3), 8);
 });
