@@ -1,0 +1,11 @@
+{
+  "name": "github-devops-demo",
+  "version": "1.0.0",
+  "description": "GitHub開発フロー実演デモ (Issue -> Branch -> PR -> Actions CI)",
+  "main": "src/calculator.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "license": "MIT"
+}
