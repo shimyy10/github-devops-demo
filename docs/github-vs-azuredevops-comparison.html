@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub vs Azure DevOps 比較資料</title>
+<style>
+  :root {
+    --bg: #eef0ee;
+    --surface: #ffffff;
+    --surface-2: #e4e7e4;
+    --ink: #1c1f1e;
+    --ink-soft: #565f5c;
+    --ink-faint: #8b938f;
+    --line: #d3d8d4;
+    --line-strong: #b8bfba;
+    --gh: #9a5b12;
+    --gh-soft: #f4e6d3;
+    --ado: #1b5fa8;
+    --ado-soft: #dde9f7;
+    --good: #2f7d4f;
+    --warn: #b5540b;
+    --neutral-tag: #565f5c;
+    --shadow: 0 1px 2px rgba(28,31,30,0.06), 0 8px 24px rgba(28,31,30,0.05);
+    --font-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --font-body: "Yu Gothic UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171a;
+      --surface: #1b1f23;
+      --surface-2: #21262b;
+      --ink: #e8eae7;
+      --ink-soft: #a3aca7;
+      --ink-faint: #6c7672;
+      --line: #2c3238;
+      --line-strong: #3a4147;
+      --gh: #e0a05a;
+      --gh-soft: #3a2e1c;
+      --ado: #6fa8e0;
+      --ado-soft: #1b2c3d;
+      --good: #5cb885;
+      --warn: #e0904f;
+      --neutral-tag: #a3aca7;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); margin: 0; padding: 0; }
+  .sheet {
+    font-family: var(--font-body);
+    color: var(--ink);
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+    line-height: 1.75;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: clamp(26px, 4vw, 36px);
+    line-height: 1.35;
+    margin: 10px 0 6px;
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+  .subtitle { color: var(--ink-soft); font-size: 15px; margin: 0 0 8px; }
+  .meta-row {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint);
+    margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line);
+  }
+  .meta-row span b { color: var(--ink-soft); font-weight: 600; }
+
+  /* at-a-glance */
+  .glance {
+    margin-top: 40px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .glance-head {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-faint);
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+  }
+  .glance-row {
+    display: grid; grid-template-columns: 200px 1fr;
+    gap: 16px; padding: 14px 20px; align-items: baseline;
+    border-bottom: 1px solid var(--line);
+  }
+  .glance-row:last-child { border-bottom: none; }
+  .glance-label { font-size: 14px; font-weight: 600; }
+  .glance-verdict { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .tag {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em;
+    padding: 3px 9px; border-radius: 5px; white-space: nowrap; font-weight: 600;
+  }
+  .tag.gh { background: var(--gh-soft); color: var(--gh); }
+  .tag.ado { background: var(--ado-soft); color: var(--ado); }
+  .tag.tie { background: var(--surface-2); color: var(--neutral-tag); }
+  .glance-note { font-size: 13.5px; color: var(--ink-soft); }
+
+  /* sections */
+  section.compare { margin-top: 56px; }
+  .sec-num { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); letter-spacing: 0.08em; }
+  section.compare h2 { font-size: 21px; margin: 4px 0 4px; text-wrap: balance; }
+  .sec-lede { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 22px; max-width: 62ch; }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 680px) { .cards { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px 20px 20px; box-shadow: var(--shadow); position: relative;
+  }
+  .card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    border-radius: 10px 0 0 10px;
+  }
+  .card.gh::before { background: var(--gh); }
+  .card.ado::before { background: var(--ado); }
+  .card-title {
+    font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  }
+  .card.gh .card-title { color: var(--gh); }
+  .card.ado .card-title { color: var(--ado); }
+  .card ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--ink); }
+  .card li { margin-bottom: 7px; }
+  .card li:last-child { margin-bottom: 0; }
+  .card li b { font-weight: 600; }
+
+  .synthesis {
+    margin-top: 16px; padding: 14px 18px; background: var(--surface-2);
+    border-radius: 8px; font-size: 14px; color: var(--ink-soft);
+  }
+  .synthesis b { color: var(--ink); font-weight: 600; }
+
+  /* matrix table */
+  .matrix-wrap { margin-top: 64px; overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+  table.matrix { border-collapse: collapse; width: 100%; min-width: 640px; background: var(--surface); font-size: 13.5px; }
+  table.matrix th, table.matrix td { padding: 11px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+  table.matrix thead th {
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-faint); background: var(--surface-2); border-bottom: 1px solid var(--line-strong);
+  }
+  table.matrix tbody tr:last-child td { border-bottom: none; }
+  table.matrix td.crit { font-weight: 600; color: var(--ink); width: 26%; }
+  table.matrix td.win-gh { color: var(--gh); }
+  table.matrix td.win-ado { color: var(--ado); }
+
+  /* pricing */
+  .pricing-wrap { margin-top: 20px; overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+  table.pricing { border-collapse: collapse; width: 100%; min-width: 560px; background: var(--surface); font-size: 13.5px; }
+  table.pricing th, table.pricing td {
+    padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+  }
+  table.pricing thead th {
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-faint); background: var(--surface-2);
+  }
+  table.pricing tbody tr:last-child td { border-bottom: none; }
+
+  /* demo callout */
+  .demo-box {
+    margin-top: 56px; border: 1px dashed var(--line-strong); border-radius: 10px;
+    padding: 20px 22px; background: var(--surface);
+  }
+  .demo-box .eyebrow { margin-bottom: 6px; }
+  .demo-box h3 { font-size: 16px; margin: 0 0 8px; }
+  .demo-box p { font-size: 14px; color: var(--ink-soft); margin: 0 0 6px; }
+  .demo-box code {
+    font-family: var(--font-mono); font-size: 12.5px; background: var(--surface-2);
+    padding: 2px 6px; border-radius: 4px;
+  }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono);
+    font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--surface-2); color: var(--ink-soft);
+  }
+  .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
+
+  /* conclusion */
+  .conclusion { margin-top: 56px; }
+  .conclusion h2 { font-size: 21px; margin-bottom: 14px; }
+  .reco-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  @media (max-width: 680px) { .reco-grid { grid-template-columns: 1fr; } }
+  .reco {
+    border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; background: var(--surface);
+  }
+  .reco .tag { margin-bottom: 10px; }
+  .reco p { font-size: 13.5px; color: var(--ink-soft); margin: 0; }
+
+  footer {
+    margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--ink-faint); font-family: var(--font-mono);
+  }
+
+  /* part divider */
+  .part-divider { margin-top: 72px; padding-top: 32px; border-top: 2px solid var(--line-strong); }
+  .part-index {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+  .part-title { font-size: clamp(22px, 3.4vw, 28px); margin: 8px 0 8px; text-wrap: balance; }
+  .part-lede { color: var(--ink-soft); font-size: 14.5px; max-width: 66ch; margin: 0; }
+
+  .phase-table-wrap { margin-top: 24px; overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+  table.phase { border-collapse: collapse; width: 100%; min-width: 760px; background: var(--surface); font-size: 13px; }
+  table.phase th, table.phase td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.phase thead th {
+    font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-faint); background: var(--surface-2); border-bottom: 1px solid var(--line-strong);
+  }
+  table.phase tbody tr:last-child td { border-bottom: none; }
+  table.phase td.phase-name { font-weight: 700; white-space: nowrap; }
+  table.phase td.use { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="eyebrow">Platform Comparison / Development Workflow</div>
+  <h1>GitHub と Azure DevOps の比較検証</h1>
+  <p class="subtitle">システム開発デモを軸に、リポジトリ管理・ソースコード管理とレビュー・CI/CDパイプライン・プロジェクト管理の4観点、および開発ライフサイクル7フェーズで整理</p>
+  <div class="meta-row">
+    <span>作成日 <b>2026-08-15</b></span>
+    <span>対象 <b>GitHub (Free / Team / Enterprise)</b></span>
+    <span>比較対象 <b>Azure DevOps Services</b></span>
+  </div>
+
+  <div class="glance">
+    <div class="glance-head">At a Glance — 4観点サマリー</div>
+    <div class="glance-row">
+      <div class="glance-label">プロジェクト/タスク管理</div>
+      <div class="glance-verdict">
+        <span class="tag ado">Azure DevOps優位</span>
+        <span class="glance-note">Boards はスクラム/かんばんの機能が本格的で、レポーティングも成熟</span>
+      </div>
+    </div>
+    <div class="glance-row">
+      <div class="glance-label">リポジトリ・成果物管理</div>
+      <div class="glance-verdict">
+        <span class="tag tie">用途による</span>
+        <span class="glance-note">「案件=1プロジェクト」に閉じるなら Azure DevOps、リポジトリ単位で横断的に扱うなら GitHub</span>
+      </div>
+    </div>
+    <div class="glance-row">
+      <div class="glance-label">ソースコード管理・レビュー</div>
+      <div class="glance-verdict">
+        <span class="tag gh">GitHub優位</span>
+        <span class="glance-note">PRレビュー体験、Copilotレビュー、OSS由来のエコシステムが厚い</span>
+      </div>
+    </div>
+    <div class="glance-row">
+      <div class="glance-label">CI/CDパイプライン</div>
+      <div class="glance-verdict">
+        <span class="tag tie">互角</span>
+        <span class="glance-note">GitHub Actions は手軽さとMarketplace、Azure Pipelines は多段リリース承認に強み</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="part-divider">
+    <div class="part-index">Part 01</div>
+    <h2 class="part-title">領域別比較</h2>
+    <p class="part-lede">プロジェクト管理・リポジトリ管理・コードレビュー・CI/CDという4つの機能領域から、両サービスの強みを整理する。</p>
+  </div>
+
+  <section class="compare">
+    <div class="sec-num">Section 01</div>
+    <h2>プロジェクト / タスク管理</h2>
+    <p class="sec-lede">計画・進捗管理の単位と、レポーティングの成熟度を比較する。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub Projects</div>
+        <ul>
+          <li>Issue / PR を紐づける<b>Projects (v2)</b>。ボード・テーブル・ロードマップの3ビュー</li>
+          <li>カスタムフィールド、フィルタ、自動化ワークフロー(Issue クローズで自動ステータス変更等)</li>
+          <li>1つの Project を複数リポジトリ・複数Organizationに横断して紐づけ可能</li>
+          <li>スプリント計画・ベロシティ・バーンダウンは標準機能では簡易的</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure Boards</div>
+        <ul>
+          <li>Epic / Feature / User Story / Task / Bug の階層的<b>作業項目</b>体系</li>
+          <li>スクラムの<b>スプリント計画・キャパシティ管理・バーンダウン</b>が標準搭載</li>
+          <li>かんばんボードのスイムレーン、WIP制限、遅延強調表示など運用機能が豊富</li>
+          <li>Analytics/Dashboards による標準レポート・ウィジェットが充実</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      軽量なIssueベースの開発なら<b>GitHub Projects</b>で十分機能する。一方、<b>スプリント計画・工数管理・進捗の定量レポート</b>を組織的に求められる案件(SIer的な受託開発など)では<b>Azure Boards</b>の方が既存の運用に馴染みやすい。
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="sec-num">Section 02</div>
+    <h2>リポジトリ管理 — 案件ごとのコード・成果物の管理</h2>
+    <p class="sec-lede">複数の案件・プロジェクトを並行して扱う場合の、コードと成果物の整理単位を比較する。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub</div>
+        <ul>
+          <li>整理の基本単位は<b>リポジトリ</b>。Organization配下にフラットに並ぶ</li>
+          <li>案件ごとにリポジトリを分け、<b>Team</b>で権限管理、<b>Topics</b>でタグ付けして検索性を確保</li>
+          <li>ビルド成果物・パッケージは<b>GitHub Packages</b>、リリース資産は<b>Releases</b>で配布</li>
+          <li>案件横断のコード検索・依存関係の可視化(Dependency Graph)が強い</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure DevOps</div>
+        <ul>
+          <li>整理の基本単位は<b>Project</b>。1案件=1Projectに、Repos/Boards/Pipelines/Artifactsが最初から同梱</li>
+          <li>1つのProject内に<b>複数のGitリポジトリ</b>を持てる(モノレポ的にもマルチレポ的にも運用可)</li>
+          <li>パッケージ・成果物は<b>Azure Artifacts</b>(NuGet/npm/Mavenなどのフィード)</li>
+          <li>Area Path / Iteration Path で案件内をさらに部門・工程別に細分化できる</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      「案件ごとに<b>コード・タスク・パイプラインをひとまとめ</b>にしたい」という要求には、Project単位で完結する<b>Azure DevOps</b>の構造がそのまま合致する。「案件をまたいだ<b>共通ライブラリの再利用や横断検索</b>」を重視するなら、リポジトリ単位でフラットに扱える<b>GitHub</b>が扱いやすい。
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="sec-num">Section 03</div>
+    <h2>ソースコード管理・レビュー</h2>
+    <p class="sec-lede">Gitホスティングとしての基本機能は共通。差はレビュー体験と周辺エコシステムに出る。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub</div>
+        <ul>
+          <li>Pull Request、Draft PR、Suggested changes、CODEOWNERS によるレビュー必須化</li>
+          <li><b>Copilot Code Review</b>による自動レビュー・要約、Copilot Chat での質問対応</li>
+          <li><b>Advanced Security</b>(CodeQL / Secret Scanning / Dependabot)が同一画面に統合</li>
+          <li>Discussions・Star・Fork など、OSS由来のコミュニティ機能が豊富</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure DevOps</div>
+        <ul>
+          <li>Pull Request に<b>ブランチポリシー</b>(必須レビュー数・ビルド検証・作業項目リンク必須化)を強制可能</li>
+          <li>作業項目(Boards)とPRの<b>紐付けが標準動線</b>に組み込まれ、追跡性が高い</li>
+          <li>コメントスレッド、Reviewer投票(承認/変更要求)は実務的だがOSS的な社交機能は薄い</li>
+          <li>セキュリティスキャンは<b>Microsoft Defender for DevOps</b>等の拡張連携が前提</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      コードレビューの<b>体験・自動化(AIレビュー含む)</b>では<b>GitHub</b>が一歩先行。<b>「PRと作業項目の追跡性を組織のポリシーとして強制したい」</b>受託開発・監査要件が強い現場では<b>Azure DevOpsのブランチポリシー</b>が有効に機能する。
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="sec-num">Section 04</div>
+    <h2>CI/CDパイプライン</h2>
+    <p class="sec-lede">どちらもYAML定義のパイプラインを持つが、強みの方向性が異なる。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub Actions</div>
+        <ul>
+          <li><code>.github/workflows/*.yml</code>にリポジトリと同居。Issue/PRイベントと自然に連動</li>
+          <li><b>Marketplace</b>に公開Action資産が非常に多く、大半の処理を再利用で組める</li>
+          <li>Matrix Build、OIDCによるクラウド認証(Azure/AWS/GCP)、Self-hosted Runnerに対応</li>
+          <li>多段階の<b>手動承認付きリリースフロー</b>はEnvironments機能で対応可能だが比較的シンプル</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure Pipelines</div>
+        <ul>
+          <li>YAMLパイプラインに加え、GUIのクラシックエディタも選択可能</li>
+          <li><b>マルチステージ・環境別承認(Approvals & Checks)</b>など、リリース管理機能が本格的</li>
+          <li>Azureリソースへのデプロイ(App Service, AKS等)は資格情報連携が特に滑らか</li>
+          <li>Microsoftホスト/セルフホストのAgent Poolを利用。他クラウドはタスク拡張機能で対応</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      OSS的な再利用性・手軽な自動化は<b>GitHub Actions</b>が強い。<b>本番リリースに厳格な承認フロー・監査証跡</b>を組み込みたい場合は<b>Azure Pipelines</b>のリリース管理機能に分がある。Azure環境へのデプロイに限れば両者ともほぼ同等に扱える。
+    </div>
+  </section>
+
+  <div class="part-divider">
+    <div class="part-index">Part 02</div>
+    <h2 class="part-title">開発ライフサイクル 7フェーズ別比較</h2>
+    <p class="part-lede">環境構築からリリース後の運用・追加開発まで、実際の開発業務の流れに沿って両サービスの機能と使いどころを整理する。</p>
+  </div>
+
+  <div class="phase-table-wrap">
+    <table class="phase">
+      <thead>
+        <tr><th>フェーズ</th><th>GitHub の主な機能</th><th>Azure DevOps の主な機能</th><th>使いどころ</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="phase-name">環境構築</td>
+          <td>Repositories, Codespaces, Dev Containers, Actions, Secrets/Variables</td>
+          <td>Repos, Dev Box(またはローカル開発環境), Pipelines, Variable groups, Service connections</td>
+          <td class="use">開発環境の統一、初期セットアップ自動化、認証情報管理</td>
+        </tr>
+        <tr>
+          <td class="phase-name">製造</td>
+          <td>Issues, Projects, Branches, Pull requests, Draft PR, Issue templates</td>
+          <td>Boards, Backlogs, Repos, Branch policies, Pull requests, Work item templates</td>
+          <td class="use">要件をチケット化し、ブランチで実装し、レビュー可能な単位にする</td>
+        </tr>
+        <tr>
+          <td class="phase-name">試験</td>
+          <td>Actions, PR checks, Artifacts, Code scanning, Dependabot alerts</td>
+          <td>Pipelines, Test Plans, Test Runs, Code coverage, Artifacts, Security scanning連携</td>
+          <td class="use">自動テストと品質チェックを継続実行し、結果を可視化する</td>
+        </tr>
+        <tr>
+          <td class="phase-name">リリース判定</td>
+          <td>PR Reviews, Branch protection, Required checks, Environments, Deployment protection rules</td>
+          <td>Approvals and checks, Branch policies, Release gates, Environment checks, Manual validation</td>
+          <td class="use">承認・品質条件を満たした変更のみをリリース対象にする</td>
+        </tr>
+        <tr>
+          <td class="phase-name">デプロイ</td>
+          <td>Actions, Deployments, Environments, OIDC, Releases/Tags</td>
+          <td>Pipelines, Deployment jobs, Environments, Service connections, Releases, Artifacts</td>
+          <td class="use">開発/本番へ安全に配布し、実行履歴と版管理を残す</td>
+        </tr>
+        <tr>
+          <td class="phase-name">運用/保守</td>
+          <td>Issues, Discussions, Actions, Dependabot, Security alerts, Projects</td>
+          <td>Boards, Dashboards, Pipelines(定期ジョブ), Alerts連携, Artifacts管理, Wiki</td>
+          <td class="use">障害対応、依存更新、脆弱性対応、運用タスク管理を回す</td>
+        </tr>
+        <tr>
+          <td class="phase-name">追加開発</td>
+          <td>Issues, Projects, Milestones, Branches, Pull requests</td>
+          <td>Boards, Iterations/Sprints, Backlogs, Repos, Pull requests, Delivery Plans</td>
+          <td class="use">改善要望を優先度付けし、継続的に機能追加を進める</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="glance" style="margin-top:20px;">
+    <div class="glance-head">Lifecycle Glance — フェーズ別優位性サマリー</div>
+    <div class="glance-row">
+      <div class="glance-label">1. 環境構築</div>
+      <div class="glance-verdict">
+        <span class="tag tie">用途による</span>
+        <span class="glance-note">Codespacesは「環境=コード」志向、Dev Boxは会社標準のフル仕様マシンを払い出す志向</span>
+      </div>
+    </div>
+    <div class="glance-row">
+      <div class="glance-label">2. 製造</div>
+      <div class="glance-verdict">
+        <span class="tag ado">Azure DevOps優位</span>
+        <span class="glance-note">Epic〜Taskの階層と見積もりフィールドが標準搭載で体系的なWBSに強い</span>
+      </div>
+    </div>
+    <div class="glance-row">
+      <div class="glance-label">3. 試験</div>
+      <div class="glance-verdict">
+        <span class="tag ado">Azure DevOps優位</span>
+        <span class="glance-note">手動テストケース管理(Test Plans)に相当する標準機能がGitHubには無い</span>
+      </div>
+    </div>
+    <div class="glance-row">
+      <div class="glance-label">4. リリース判定</div>
+      <div class="glance-verdict">
+        <span class="tag ado">Azure DevOps優位</span>
+        <span class="glance-note">Release Gatesは監視アラート等と連携した自動ゲート条件を組める表現力がある</span>
+      </div>
+    </div>
+    <div class="glance-row">
+      <div class="glance-label">5. デプロイ</div>
+      <div class="glance-verdict">
+        <span class="tag tie">用途による</span>
+        <span class="glance-note">戦略的デプロイ(カナリア等)やリソース単位追跡はADO、手軽なOIDC連携はGitHub</span>
+      </div>
+    </div>
+    <div class="glance-row">
+      <div class="glance-label">6. 運用/保守</div>
+      <div class="glance-verdict">
+        <span class="tag tie">用途による</span>
+        <span class="glance-note">横断ダッシュボードはADO、依存関係更新やセキュリティ検知はGitHubが手厚い</span>
+      </div>
+    </div>
+    <div class="glance-row">
+      <div class="glance-label">7. 追加開発</div>
+      <div class="glance-verdict">
+        <span class="tag tie">用途による</span>
+        <span class="glance-note">単一チームならGitHubで十分、複数チーム横断のロードマップはDelivery Plansが強い</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="compare">
+    <div class="sec-num">Phase 01 / 07</div>
+    <h2>環境構築</h2>
+    <p class="sec-lede">開発を始める前の「土台」をどう標準化・自動化するか。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub</div>
+        <ul>
+          <li><b>Codespaces</b>:リポジトリに<code>devcontainer.json</code>を同居させ、クラウド開発環境をワンクリックで起動</li>
+          <li><b>Dev Containers</b>:ローカルVS CodeでもDockerベースで同一環境を再現、構成自体をコードとして管理</li>
+          <li><b>Actions</b>による初期セットアップスクリプト・シードデータ投入の自動化</li>
+          <li><b>Secrets/Variables</b>をRepository/Organization/Environment単位で暗号化管理</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure DevOps</div>
+        <ul>
+          <li><b>Microsoft Dev Box</b>:会社標準イメージに基づくフル仕様のクラウド開発マシンをセルフサービスで払い出し</li>
+          <li>従来型の<b>Repos + ローカルIDE</b>クローンも標準的な選択肢</li>
+          <li><b>Pipelines</b>で環境構築タスクをYAML化して自動実行</li>
+          <li><b>Variable groups</b>をAzure Key Vaultと直接連携、<b>Service connections</b>で外部サービスへの認証情報を権限付きで管理</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      「環境構成をリポジトリに同居させ即座に再現する」思想はGitHub Codespaces/Dev Containersが徹底しており、オンボーディング速度で優位。一方、<b>Dev Box</b>はOSレベルのフル環境を会社標準ポリシーで払い出す発想で、PC運用ルールが厳格な大企業に馴染みやすい。Key Vault連携の深さは<b>Azure DevOps</b>に分がある。
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="sec-num">Phase 02 / 07</div>
+    <h2>製造</h2>
+    <p class="sec-lede">要件をどう分解し、実装・レビュー可能な単位に落とし込むか。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub</div>
+        <ul>
+          <li><b>Issues</b>:ラベル・アサイン・マイルストーンで軽量管理、Issue Forms(YAML)でテンプレート化</li>
+          <li><b>Projects</b>:ボード/テーブル/ロードマップの3ビューでカスタムフィールドを柔軟に追加</li>
+          <li><b>Branches</b>の命名規則は運用ルール任せ、<b>Draft PR</b>で実装中を明示</li>
+          <li><b>Pull requests</b>がレビュー・議論・自動チェックの起点になる</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure DevOps</div>
+        <ul>
+          <li><b>Boards</b>:Epic &gt; Feature &gt; User Story &gt; Task の階層で要件を体系的に分解、Story Point等の見積もりフィールドが標準</li>
+          <li><b>Backlogs</b>で製品バックログの優先順位付け・ランキング画面が独立して存在</li>
+          <li><b>Branch policies</b>でレビュー必須数・ビルド検証・作業項目リンク必須化を強制</li>
+          <li><b>Work item templates</b>でフィールドを事前入力し、入力漏れを防止</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      要件を厳密なWBSとして分解し見積もり・進捗まで一体管理したいなら<b>Azure Boards</b>の階層構造が有効。開発者主導で素早くIssueを起票し実装に着手する軽量フローは<b>GitHub</b>が向く。
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="sec-num">Phase 03 / 07</div>
+    <h2>試験</h2>
+    <p class="sec-lede">自動テスト・品質チェックをどこまで標準機能で継続実行・可視化できるか。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub</div>
+        <ul>
+          <li><b>Actions</b>でpush/PRをトリガーに自動テストをマトリクス実行</li>
+          <li><b>PR checks</b>で必須ステータスチェックをマージ条件化</li>
+          <li><b>Artifacts</b>にテスト結果・カバレッジレポートを保存</li>
+          <li><b>Code scanning(CodeQL)</b>によるSASTがPR上にネイティブ統合、<b>Dependabot alerts</b>で依存脆弱性を自動検知</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure DevOps</div>
+        <ul>
+          <li><b>Pipelines</b>でビルド・自動テストをステージ実行</li>
+          <li><b>Test Plans</b>:手動テストケース・スイート・探索的テストを専用モジュールで管理し、要件からのトレーサビリティを確保</li>
+          <li><b>Test Runs</b>で合格率推移など実行結果の傾向を可視化</li>
+          <li><b>Code coverage</b>をパイプライン標準機能として収集、<b>Security scanning連携</b>(GitHub Advanced Security for Azure DevOps等)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      自動テスト+SASTを開発フローに溶け込ませる完成度は<b>GitHub Actions</b>が高い。一方、QA部門による<b>手動テスト計画・実施・トレーサビリティ管理</b>が必須の現場では、GitHub側に相当する標準機能が無く、<b>Azure Test Plans</b>が明確な差別化ポイントになる。
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="sec-num">Phase 04 / 07</div>
+    <h2>リリース判定</h2>
+    <p class="sec-lede">承認・品質条件を満たした変更だけをリリース対象にする仕組み。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub</div>
+        <ul>
+          <li><b>PR Reviews / Branch protection</b>で必須レビュー数・署名付きコミット必須化などをブランチ単位で強制</li>
+          <li><b>Required checks</b>でCI合格をマージ条件化</li>
+          <li><b>Environments</b>で環境ごとに必須レビュアー・待機時間・デプロイ可能ブランチを設定</li>
+          <li><b>Deployment protection rules</b>でカスタムアクション/外部APIによる独自ゲートを追加可能</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure DevOps</div>
+        <ul>
+          <li><b>Approvals and checks</b>でステージごとに事前/事後承認、営業時間内限定などの条件を設定</li>
+          <li><b>Release gates</b>:作業項目クエリの結果・Azure Monitorアラート・外部API呼び出しなど、人手を介さない自動ゲート条件を多様に組める</li>
+          <li><b>Branch policies</b>で作業項目リンク必須化などをマージ条件に追加</li>
+          <li><b>Manual validation</b>でパイプライン内に人による確認ステップを明示的に挿入</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      監視アラートや作業項目状態など、複数の自動条件を組み合わせた厳格なゲートを標準機能だけで組みたい場合は<b>Azure DevOps</b>の表現力が高い。シンプルなレビュー承認+必須チェックで足りる規模なら<b>GitHub Environments</b>で十分機能する。
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="sec-num">Phase 05 / 07</div>
+    <h2>デプロイ</h2>
+    <p class="sec-lede">開発/本番へどう安全に配布し、実行履歴と版管理を残すか。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub</div>
+        <ul>
+          <li><b>Actions</b>でデプロイジョブをワークフローとして記述、環境ごとにジョブを分岐</li>
+          <li><b>Deployments</b>(Deployment API)で実行履歴・ステータスを追跡</li>
+          <li><b>Environments</b>でシークレットのスコープ分離と保護ルールを環境単位に適用</li>
+          <li><b>OIDC</b>でクラウドプロバイダへトークンレス認証、<b>Releases/Tags</b>でセマンティックバージョンのリリースノート・成果物を配布</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure DevOps</div>
+        <ul>
+          <li><b>Pipelines</b>でリリースステージをYAMLまたはクラシックエディタで定義</li>
+          <li><b>Deployment jobs</b>でローリング・カナリアなどのデプロイ戦略を標準機能として指定可能</li>
+          <li><b>Environments</b>にKubernetesネームスペースやVMグループを「リソース」として登録し、実体単位のデプロイ履歴を追跡</li>
+          <li><b>Service connections</b>で外部サービス認証を一元管理(ワークロードID連携対応)、<b>Artifacts</b>でデプロイ対象パッケージを管理</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      Kubernetes/VM群への実体レベルのデプロイ追跡や、カナリア・ローリングといったデプロイ戦略を標準機能で持つのは<b>Azure Pipelines</b>の強み。<b>GitHub Actions</b>はOIDCによるシンプルで安全な認証と、Marketplaceの豊富なデプロイ用Actionの組み合わせで多くのクラウドターゲットに素早く対応できる。
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="sec-num">Phase 06 / 07</div>
+    <h2>運用/保守</h2>
+    <p class="sec-lede">障害対応・依存更新・脆弱性対応・運用タスクを継続的に回す仕組み。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub</div>
+        <ul>
+          <li><b>Issues</b>で障害・不具合報告をラベル分類して追跡、<b>Discussions</b>でナレッジ共有</li>
+          <li><b>Actions</b>のcronトリガーで定期ジョブ(バッチ処理・監視)を実行</li>
+          <li><b>Dependabot</b>が依存関係の更新PRを自動作成、<b>Security alerts</b>が脆弱性検知を通知</li>
+          <li><b>Projects</b>で運用タスクのバックログをボード管理</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure DevOps</div>
+        <ul>
+          <li><b>Boards</b>で障害・運用タスクを作業項目として体系管理</li>
+          <li><b>Dashboards</b>でビルド状況・作業項目クエリなど多彩なウィジェットをプロジェクト横断で可視化</li>
+          <li><b>Pipelines(定期ジョブ)</b>のスケジュールトリガーで定期実行、<b>Alerts連携</b>でAzure Monitor/Application Insightsのアラートを作業項目に連携</li>
+          <li><b>Artifacts管理</b>で運用に必要なパッケージを管理、<b>Wiki</b>でGit管理された運用手順書(Runbook)を整備</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      監視アラートを作業項目へ自動連携し、プロジェクト横断のダッシュボードで運用状況を俯瞰する仕組みは<b>Azure DevOps</b>の方が標準機能で完結しやすい。<b>GitHub</b>は依存関係更新(Dependabot)やセキュリティアラートといった「開発寄りの保守」の自動化が手厚い。
+    </div>
+  </section>
+
+  <section class="compare">
+    <div class="sec-num">Phase 07 / 07</div>
+    <h2>追加開発</h2>
+    <p class="sec-lede">改善要望を優先度付けし、継続的に機能追加を進める仕組み。</p>
+    <div class="cards">
+      <div class="card gh">
+        <div class="card-title">GitHub</div>
+        <ul>
+          <li><b>Issues / Projects</b>で改善要望をIssue化しボードで優先順位付け</li>
+          <li><b>Milestones</b>でリリース単位にIssue/PRをグルーピングし期日管理</li>
+          <li><b>Branches / Pull requests</b>で継続的な機能追加を通常の開発フローに乗せる</li>
+        </ul>
+      </div>
+      <div class="card ado">
+        <div class="card-title">Azure DevOps</div>
+        <ul>
+          <li><b>Boards / Backlogs</b>で改善要望をバックログに積み優先順位付け</li>
+          <li><b>Iterations/Sprints</b>で正式なスプリントサイクルとして計画・実施</li>
+          <li><b>Delivery Plans</b>で複数チーム・複数スプリントを横断したロードマップをカレンダー表示で可視化</li>
+          <li><b>Repos / Pull requests</b>で通常の開発フローとして実装</li>
+        </ul>
+      </div>
+    </div>
+    <div class="synthesis">
+      単一チームで軽量にマイルストーン管理する分には<b>GitHub</b>で十分。複数チームのスプリントをまたいだリリース計画の可視化・調整が必要な規模になると、<b>Azure DevOps</b>の<b>Delivery Plans</b>が持つ横断ロードマップ機能に強みがある。
+    </div>
+  </section>
+
+  <div class="part-divider">
+    <div class="part-index">Part 03</div>
+    <h2 class="part-title">横断比較マトリクスと結論</h2>
+    <p class="part-lede">Part 01・Part 02を踏まえ、組織・基盤面での違いと料金、実演デモ、使い分けの結論をまとめる。</p>
+  </div>
+
+  <div class="matrix-wrap">
+    <table class="matrix">
+      <thead>
+        <tr><th>比較軸</th><th>GitHub</th><th>Azure DevOps</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="crit">組織の整理単位</td><td>Organization → Repository</td><td>Organization → Project(Repos/Boards/Pipelines同梱)</td></tr>
+        <tr><td class="crit">ID / SSO</td><td>GitHub ID、SAML/OIDC SSO(Enterprise)</td><td>Microsoft Entra ID とネイティブ統合</td></tr>
+        <tr><td class="crit">CI/CD</td><td>GitHub Actions</td><td>Azure Pipelines</td></tr>
+        <tr><td class="crit">タスク管理</td><td>Projects (v2) / Issues</td><td>Boards(Scrum/Kanban 本格対応)</td></tr>
+        <tr><td class="crit">パッケージ管理</td><td>GitHub Packages</td><td>Azure Artifacts</td></tr>
+        <tr><td class="crit">セキュリティ機能</td><td class="win-gh">Advanced Security が標準統合</td><td>Defender for DevOps 等と連携が必要</td></tr>
+        <tr><td class="crit">AIレビュー/支援</td><td class="win-gh">Copilot が全面統合</td><td>GitHub Copilot拡張で部分対応</td></tr>
+        <tr><td class="crit">リリース承認フロー</td><td>Environments(簡易)</td><td class="win-ado">Approvals & Checks(本格的)</td></tr>
+        <tr><td class="crit">OSS / コミュニティ機能</td><td class="win-gh">Star・Fork・Discussions 等が充実</td><td>限定的</td></tr>
+        <tr><td class="crit">オンプレミス版</td><td>GitHub Enterprise Server</td><td>Azure DevOps Server</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pricing-wrap">
+    <table class="pricing">
+      <thead>
+        <tr><th>プラン</th><th>GitHub</th><th>Azure DevOps</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>無料枠</td><td>Free(パブリックリポジトリ無制限、プライベートも基本機能利用可)</td><td>Basic プラン、最初の5ユーザーまで無料</td></tr>
+        <tr><td>有償プラン</td><td>Team / Enterprise(ユーザー課金 + Actions分課金)</td><td>Basic + Test Plans など(ユーザー課金)</td></tr>
+        <tr><td>CI/CD実行時間</td><td>Actions は無料枠超過分を分単位で従量課金</td><td>MicrosoftホストParallel Jobsは無料枠超過分を従量課金</td></tr>
+        <tr><td>セキュリティ機能</td><td>Advanced Security は別途追加ライセンス</td><td>Defender for DevOps は別サービスとして課金</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:12.5px;color:var(--ink-faint);margin-top:8px;">※料金・プラン内容は変更される可能性があるため、導入判断時は各社公式サイトで最新情報を確認すること。</p>
+
+  <div class="demo-box">
+    <div class="eyebrow">Hands-on Demo</div>
+    <h3>実演デモ:サンプルリポジトリでの開発フロー</h3>
+    <p>本比較に対応する実演として、実際の GitHub 上に Issue 作成 → ブランチ運用 → Pull Request → GitHub Actions による CI/CD、という一連の開発フローを再現した。</p>
+    <p>リポジトリ: <code><a href="https://github.com/shimyy10/github-devops-demo" style="color:var(--gh);" target="_blank" rel="noopener">shimyy10/github-devops-demo</a></code></p>
+    <p style="margin-top:10px;">実施した流れ:</p>
+    <ul style="font-size:14px;color:var(--ink-soft);padding-left:18px;margin:0;">
+      <li><a href="https://github.com/shimyy10/github-devops-demo/issues/1" style="color:var(--gh);">Issue #1</a> — 機能要望(power関数)を起票</li>
+      <li><code>feature/power-function</code> ブランチで実装</li>
+      <li><a href="https://github.com/shimyy10/github-devops-demo/pull/2" style="color:var(--gh);">PR #2</a> — Issueを参照するPull Requestを作成</li>
+      <li>GitHub Actions が Node.js 18 / 20 のマトリクスで自動テスト実行 → 成功</li>
+      <li>PRをsquashマージ → Issueが自動クローズ</li>
+    </ul>
+    <p style="margin-top:10px;"><span class="status-pill" style="color:var(--good);"><span class="dot" style="background:var(--good);"></span>完了</span></p>
+  </div>
+
+  <div class="conclusion">
+    <div class="sec-num">Conclusion</div>
+    <h2>使い分けの結論</h2>
+    <div class="reco-grid">
+      <div class="reco">
+        <span class="tag gh">GitHubが向くケース</span>
+        <p>プロダクト開発中心で開発者体験・AI支援・OSS連携を重視するチーム。マイクロサービス等でリポジトリを横断的に増減させる開発スタイル。セキュリティ機能を1画面で完結させたい場合。</p>
+      </div>
+      <div class="reco">
+        <span class="tag ado">Azure DevOpsが向くケース</span>
+        <p>すでにMicrosoft 365/Entra IDを基盤とする組織。案件(Project)単位でコード・タスク・リリースを厳格に紐付けて管理したい受託開発・SIer。多段階承認を伴う本番リリースフローが必須の現場。</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Prepared 2026-08-15 · GitHub vs Azure DevOps Comparison · 作成: Claude
+  </footer>
+</div>
+</body>
+</html>
